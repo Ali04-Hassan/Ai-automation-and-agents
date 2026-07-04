@@ -1,0 +1,192 @@
+{
+  "name": "Backend Workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        208
+      ],
+      "id": "ed2adec7-a8d3-4a28-bf13-5cab11fe8fd1",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jCh6CitH0b2GrDqy",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Knowledge Base Uploader",
+        "formDescription": "Please upload your PDF documents to update the AI Agent's vector store.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload PDF Document",
+              "fieldType": "file",
+              "fieldName": "data",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "77d544b4-9099-4c32-b333-5ccc869ba2d9",
+      "name": "On form submission",
+      "webhookId": "a46db676-54f6-48ef-bdef-3457d22c543c"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "id": "dc21158a-643b-42e4-b3e8-cae0f1725824",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        480,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        480,
+        528
+      ],
+      "id": "6b2672f7-12d4-477d-884a-fba1c5042bb1",
+      "name": "Recursive Character Text Splitter1"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "File Uploaded!",
+        "completionMessage": "Your PDF documents have been successfully processed and added to the AI Agent's vector store.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        0
+      ],
+      "id": "cb74398f-9489-4b37-9903-640e1eddf138",
+      "name": "Form",
+      "webhookId": "f57f25d5-d6e4-4ea4-9cfb-0dbbb040aad4"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "rag-knowledge-base-3072",
+          "mode": "list",
+          "cachedResultName": "rag-knowledge-base-3072"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "dd3c3f46-82f8-4ab7-824e-60c8ff526fda",
+      "name": "Document Ingestion (Pinecone)",
+      "notesInFlow": false,
+      "credentials": {
+        "pineconeApi": {
+          "id": "yGkJxaXag4faDPnV",
+          "name": "Pinecone account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Document Ingestion (Pinecone)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Document Ingestion (Pinecone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Document Ingestion (Pinecone)",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Ingestion (Pinecone)": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "34b1dd93-13c1-462a-a9c6-ff6199a15621",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19ed03f4cbca1e2a8d42254770c84972ea39eeaa5f380a2246b0efdae8ba6d32"
+  },
+  "nodeGroups": [],
+  "id": "z8zEwwRTh2kZwRKS",
+  "tags": []
+}

@@ -1,0 +1,346 @@
+{
+  "name": "Automated Lead Scoring System using AI Agents",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Project Inquiry Form",
+        "formDescription": "Tell us about your project requirements.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Your Name",
+              "fieldName": "name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email Address",
+              "fieldType": "email",
+              "fieldName": "Email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe your project, budget, and timeline",
+              "fieldType": "textarea",
+              "fieldName": "message",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -384,
+        -16
+      ],
+      "id": "ecf2a2d6-b7a1-4c3b-b50f-459190d8fb59",
+      "name": "On form submission",
+      "webhookId": "78c0e459-36c9-4071-8572-afc9630b5143"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Name: {{ $json.name }}\nEmail: {{ $json.Email }}\nMessage: {{ $json.message }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert Lead Qualification AI. Your sole job is to analyze \nincoming client messages and extract structured lead data with precision.\n\n## EXTRACTION TARGETS\nExtract the following fields from the user's message:\n- **name**: Full name of the lead (or \"Unknown\" if not mentioned)\n- **email**: Email address if present (or null)\n- **budget**: Numeric budget in USD. If a range is given, take the midpoint.\n  If vague (e.g. \"small budget\"), map to an estimated number and flag it.\n- **projectIntent**: A concise 1-sentence summary of what they want built.\n- **urgency**: \"low\" | \"medium\" | \"high\" — inferred from language cues \n  (e.g. \"ASAP\", \"next week\" = high; \"someday\" = low)\n- **leadScore**: Integer from 1–10 using the scoring rubric below.\n\n## LEAD SCORING RUBRIC\n| Factor                        | Points |\n|-------------------------------|--------|\n| Concrete budget stated        | +3     |\n| Budget > $5,000               | +1     |\n| Clear project scope/intent    | +2     |\n| High urgency signals          | +2     |\n| Contact info provided         | +1     |\n| Vague or no budget            | -2     |\n| No clear intent               | -2     |\n\n## OUTPUT RULES\n- Respond ONLY with the JSON object matching the output schema.\n- Do NOT include explanations, markdown, or preamble.\n- If a field cannot be determined, use null — never guess names or emails.\n- All scores must reflect the rubric honestly. Never inflate scores.\nIMPORTANT: Return ONLY a raw JSON object. No markdown, no backticks, no explanation."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -208,
+        -16
+      ],
+      "id": "c26a5f97-a388-4b7f-876e-9388fa72737f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        192
+      ],
+      "id": "beae7ec4-15ef-4264-b079-8a17107c36de",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lEaPPqybLM2f2oZW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"name\": \"Ali Hassan\",\n  \"email\": \"ali@example.com\",\n  \"budget\": 5000,\n  \"projectIntent\": \"Build an e-commerce website\",\n  \"urgency\": \"high\",\n  \"leadScore\": 8\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        192
+      ],
+      "id": "856d3bdb-1a78-4adf-981b-2f96d15923a4",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1PSxEWAjGXpKJuSjM-Cyz6tjEgp8I-O3kdNydFOX5I7c",
+          "mode": "list",
+          "cachedResultName": "Lead Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PSxEWAjGXpKJuSjM-Cyz6tjEgp8I-O3kdNydFOX5I7c/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1PSxEWAjGXpKJuSjM-Cyz6tjEgp8I-O3kdNydFOX5I7c/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('On form submission').item.json.name }}",
+            "email": "={{ $('On form submission').item.json.Email }}",
+            "budget": "={{ $json.output.budget }}",
+            "submittedAt": "={{ $('On form submission').item.json.submittedAt }}",
+            "projectIntent": "={{ $json.output.projectIntent }}",
+            "urgency": "={{ $json.output.urgency }}",
+            "leadScore": "={{ $json.output.leadScore }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "projectIntent",
+              "displayName": "projectIntent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "leadScore",
+              "displayName": "leadScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "8870de0b-07d5-40b7-8cd1-f46dea26f7d2",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "cvzHhS8atAMRsrnL",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f8711653-16ec-4189-aa7c-0449706eefd8",
+              "leftValue": "={{ $json.leadScore }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        -16
+      ],
+      "id": "e135b8c0-0c7c-4a6c-8885-2a8a9486fb2f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "aliram3971@gmail.com",
+        "subject": "=🔥 Hot Lead Alert - {{ $('On form submission').item.json.name }}",
+        "message": "=New hot lead received!  Name: {{ $('On form submission').item.json.name }} Email: {{ $('On form submission').item.json.Email }} Budget: ${{ $('AI Agent').item.json.output.budget }} Project: {{ $('AI Agent').item.json.output.projectIntent }} Urgency: {{ $('AI Agent').item.json.output.urgency }} Lead Score: {{ $('AI Agent').item.json.output.leadScore }}/10",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        -112
+      ],
+      "id": "9aae214f-8f9d-4b12-a5dc-8a7e216d6345",
+      "name": "Send a message",
+      "webhookId": "75a2673f-85fa-48fe-b1ae-b4472e120600",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kxx7ncJJUL1pWSbV",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "78be5c42-0f2b-46ba-ba9e-77a52da89df7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a662ac25b1218f5266b3f16cb644d5e6da92124e1619943c2d4d481bbbf5b0b1"
+  },
+  "nodeGroups": [],
+  "id": "tk14gx3jXOEYPilL",
+  "tags": []
+}

@@ -1,0 +1,361 @@
+{
+  "name": "Wattsapp Agentic Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ali04.app.n8n.cloud",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1296,
+        176
+      ],
+      "id": "a9d1a563-8095-48db-86e3-051458426935",
+      "name": "Webhook",
+      "webhookId": "87ad7ebd-e5e4-4c95-b173-e658c91dfb63"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://7107.api.greenapi.com/waInstance7107664358/sendMessage/ac36fce6320141589eb7d4abdca1aa304c41be552b434aa1ba",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $node.Webhook.json.body.senderData.chatId }}\",\n  \"message\": {{ JSON.stringify($json.output) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "eb9580b4-744f-4795-9d0c-01c498ef9cf4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $node[\"Webhook\"].json.body.messageData.textMessageData.textMessage }}",
+        "options": {
+          "systemMessage": "You are the personal AI Assistant of Ali Hassan, a 22-year-old Computer Engineering student at UET Lahore (KSK Campus).\n\nCRITICAL RESPONSE RULES:\n1. Greeting: Always start your very first response with \"Assalam o Alaikum! Main Ali Hassan ka AI Assistant hoon.\" For subsequent messages, maintain this identity naturally.\n2. Anti-Spam & Human Mind Logic: If the user sends multiple back-to-back questions or 10 messages in a row, do not reply to each individually. Wait, process the core intent of all incoming text, and combine them into exactly ONE single, short, friendly, and polite brief response.\n3. Call Handling: If the user makes a voice or video call, reply politely: \"Assalam o Alaikum! Sahi waqt par call karne ke liye shukriya, lekin abhi main sirf text messages handle kar sakta hoon. Ali Hassan busy hain, aap apna message chor dein, wo jald hi check kar lein ge.\"\n4. Media Handling (Images/Videos): If the user sends a photo, video, or document, reply intelligently like a human: \"Zabardast! Mujhe aap ki bheji hui file/media mil gayi hai. Main abhi sirf text par baat kar sakta hoon, lekin main ne yeh file Ali Hassan ke liye save kar li hai.\"\n5. Length, Language & Tone: Keep replies extremely short, precise, and strictly TO THE POINT. Speak strictly in \"Roman Urdu/Hindi\" mixed with casual English. Be respectful, cool, and friendly (Bro, Zabardast, Sahi ho gaya). Proudly state Ali Hassan developed you if asked."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -480,
+        112
+      ],
+      "id": "e3cad65c-d96e-4275-8b66-74220c0dc2e1",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "q": "={{ $fromAI('Query', 'The search query', 'string') }}",
+        "locationSettings": {},
+        "languageSettings": {},
+        "searchOptions": {},
+        "timeFilters": {},
+        "pagination": {},
+        "advancedOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@searchapi/n8n-nodes-searchapi.searchApiTool",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        416
+      ],
+      "id": "70fd4596-2f1b-4ad6-a1fd-a94b5e7b273c",
+      "name": "Search google in SearchApi",
+      "credentials": {
+        "searchApi": {
+          "id": "b2ioEXqYiKWUs6r5",
+          "name": "SearchApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -576,
+        448
+      ],
+      "id": "dbd87609-ff21-4833-97ab-08aa3fb8b82d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "lEClHYbsDD1ucKFe",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.body?.senderData?.chatId || $json.body?.messageData?.sender || \"default\" }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -400,
+        448
+      ],
+      "id": "4c36999d-57d1-4eb9-b73c-3c6761ef70d0",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://7107.api.greenapi.com/waInstance7107664358/sendMessage/ac36fce6320141589eb7d4abdca1aa304c41be552b434aa1ba",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $node.Webhook.json.body.senderData.chatId }}\",\n  \"message\": \"Sorry! System abhi busy hai, baraye meharbani kuch seconds baad dubara message karein.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        224
+      ],
+      "id": "536b7b8f-dada-4e34-a366-2610269f639e",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "54761021-bac4-4c13-915f-8b36063f4b0b",
+              "leftValue": "={{ $json.body.chatId }}",
+              "rightValue": "@g.us",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -800,
+        96
+      ],
+      "id": "aae808d7-30c1-4f82-96a5-09452f545e0e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.typeWebhook }}",
+                    "rightValue": "incomingMessageReceived",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2d8a3e94-478b-4e2d-a5df-6714fb6fb8c8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Messages"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7bcba62c-f4cd-4a92-bbec-dfd783a49493",
+                    "leftValue": "={{ $json.body.typeWebhook }}",
+                    "rightValue": "incomingCallReceived",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Calls"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1088,
+        176
+      ],
+      "id": "e3159e92-c646-49eb-b1a5-8a2d982ca6a7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://7107.api.greenapi.com/waInstance7107664358/sendMessage/ac36fce6320141589eb7d4abdca1aa304c41be552b434aa1ba",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $node.Webhook.json.body.senderData.chatId }}\",\n  \"message\": \"Assalam o Alaikum! Sahi waqt par call karne ke liye shukriya, lekin abhi main sirf text messages handle kar sakta hoon. Ali Hassan busy hain, aap apna message chor dein.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -800,
+        272
+      ],
+      "id": "cb802d24-6d8a-43bd-bf3b-56e11b870548",
+      "name": "HTTP Request2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search google in SearchApi": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9a139426-ec05-4c66-b8b3-eced493ea909",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a662ac25b1218f5266b3f16cb644d5e6da92124e1619943c2d4d481bbbf5b0b1"
+  },
+  "nodeGroups": [],
+  "id": "LJJ6zcDAU9avw4yN",
+  "tags": []
+}
