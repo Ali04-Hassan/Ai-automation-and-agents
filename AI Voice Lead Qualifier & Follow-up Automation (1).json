@@ -1,0 +1,404 @@
+{
+  "name": "AI Voice Lead Qualifier & Follow-up Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d3c32531-c9a8-4b53-82ef-fe35b208bfbf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -880,
+        -224
+      ],
+      "id": "ef8f66e1-dcc4-4937-b297-90b8ad693746",
+      "name": "Receive Call Data (Vapi)",
+      "webhookId": "d3c32531-c9a8-4b53-82ef-fe35b208bfbf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const args = $input.first().json.body.message.toolCalls[0].function['arguments'];\n\nconst name = args.name || \"Not provided\";\nconst service = args.service || \"Not specified\";\nconst preferredTime = args.preferred_time || \"Not specified\";\n\nlet numericBudget = 0;\nif (args.budget) {\n  numericBudget = parseFloat(String(args.budget).replace(/[^0-9.]/g, '')) || 0;\n}\n\n// Priority logic\nlet priority = \"Low\";\nif (numericBudget >= 1000) {\n  priority = \"High\";\n} else if (numericBudget >= 500) {\n  priority = \"Medium\";\n}\n\nreturn {\n  json: {\n    name: name,\n    service: service,\n    budget: numericBudget,\n    preferred_time: preferredTime,\n    priority: priority\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        -224
+      ],
+      "id": "089d4be5-8ae6-4e6b-846c-73f29de968a5",
+      "name": "Clean & Score Lead Data"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appy5AaJloeKFnllc",
+          "mode": "list",
+          "cachedResultName": "Voice AI Lead Tracker",
+          "cachedResultUrl": "https://airtable.com/appy5AaJloeKFnllc"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbldJrzKNNoSgsJAx",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appy5AaJloeKFnllc/tbldJrzKNNoSgsJAx"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.name }}",
+            "Service Interested In": "={{ $json.service }}",
+            "Budget": "={{ $json.budget }}",
+            "Preferred Contact Time": "={{ $json.preferred_time }}",
+            "Priority": "={{ $json.priority }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Service Interested In",
+              "displayName": "Service Interested In",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Preferred Contact Time",
+              "displayName": "Preferred Contact Time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date Received",
+              "displayName": "Date Received",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Follow-up Status",
+              "displayName": "Follow-up Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "New",
+                  "value": "New"
+                },
+                {
+                  "name": "Contacted",
+                  "value": "Contacted"
+                },
+                {
+                  "name": "Qualified",
+                  "value": "Qualified"
+                },
+                {
+                  "name": "Not Interested",
+                  "value": "Not Interested"
+                },
+                {
+                  "name": "Follow-up Scheduled",
+                  "value": "Follow-up Scheduled"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Contact Method",
+              "displayName": "Contact Method",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Phone",
+                  "value": "Phone"
+                },
+                {
+                  "name": "Email",
+                  "value": "Email"
+                },
+                {
+                  "name": "Text",
+                  "value": "Text"
+                },
+                {
+                  "name": "Other",
+                  "value": "Other"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Lead Source",
+              "displayName": "Lead Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Voice AI Call",
+                  "value": "Voice AI Call"
+                },
+                {
+                  "name": "Web Form",
+                  "value": "Web Form"
+                },
+                {
+                  "name": "Referral",
+                  "value": "Referral"
+                },
+                {
+                  "name": "Other",
+                  "value": "Other"
+                },
+                {
+                  "name": "Website",
+                  "value": "Website"
+                },
+                {
+                  "name": "Social Media",
+                  "value": "Social Media"
+                },
+                {
+                  "name": "Event",
+                  "value": "Event"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        -224
+      ],
+      "id": "9005eb26-8161-4981-b2bb-ee708452abc4",
+      "name": "Save Lead to CRM (Airtable)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "tf9Tr0KV1iPO0CIW",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "whatsapp:+14155238886",
+        "to": "whatsapp:+923117290134",
+        "message": "=Hi {{ $('Save Lead to CRM (Airtable)').item.json.fields.Name }}, thanks for calling! We received your interest in {{ $('Save Lead to CRM (Airtable)').item.json.fields['Service Interested In'] }}. Budget: {{ $('Save Lead to CRM (Airtable)').item.json.fields.Budget }} dollars. We'll contact you at {{ $('Save Lead to CRM (Airtable)').item.json.fields['Preferred Contact Time'] }}.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -576
+      ],
+      "id": "42313e01-021b-4f9d-8e5c-f4808f843b7e",
+      "name": "Send WhatsApp Confirmation",
+      "credentials": {
+        "twilioApi": {
+          "id": "rNKmzsK4AbVYMlFJ",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "+19496491912",
+        "to": "+923117290134",
+        "message": "=Hi {{ $json.fields.Name }}, thanks for calling! We received your interest in {{ $json.fields[\"Service Interested In\"] }}. Budget: {{ $json.fields.Budget }} dollars. We'll contact you at {{ $json.fields[\"Preferred Contact Time\"] }}.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -224
+      ],
+      "id": "c7d3a4bc-4043-4af1-b241-3db7f8494820",
+      "name": "Send SMS Confirmation",
+      "credentials": {
+        "twilioApi": {
+          "id": "rNKmzsK4AbVYMlFJ",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "aliram3971@gmail.com",
+        "subject": "=New Lead: {{ $('Clean & Score Lead Data').item.json.name }}",
+        "emailType": "text",
+        "message": "=New lead captured from voice agent: \nName: {{ $('Clean & Score Lead Data').item.json.name }}\nService: {{ $('Clean & Score Lead Data').item.json.service }}\nBudget: {{ $('Clean & Score Lead Data').item.json.budget }}\nPreferred Contact Time: {{ $('Clean & Score Lead Data').item.json.preferred_time }}\nPriority: {{ $('Clean & Score Lead Data').item.json.priority }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        -224
+      ],
+      "id": "98691964-e96a-4e38-bc42-bb59f444df6d",
+      "name": "Notify Business Owner (Email)",
+      "webhookId": "c1838213-98e9-4093-b541-ad7034d0507e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "kxx7ncJJUL1pWSbV",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Call Data (Vapi)": {
+      "main": [
+        [
+          {
+            "node": "Clean & Score Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Score Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to CRM (Airtable)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to CRM (Airtable)": {
+      "main": [
+        [
+          {
+            "node": "Send SMS Confirmation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS Confirmation": {
+      "main": [
+        [
+          {
+            "node": "Notify Business Owner (Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Business Owner (Email)": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "003e9954-244c-421b-a1f5-aa35127e04c2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a662ac25b1218f5266b3f16cb644d5e6da92124e1619943c2d4d481bbbf5b0b1"
+  },
+  "nodeGroups": [],
+  "id": "t3MNt9Qil6HHRvNe",
+  "tags": []
+}
