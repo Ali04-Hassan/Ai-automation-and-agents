@@ -1,0 +1,1595 @@
+{
+  "name": "24/7 AI Support Agent for E-Commerce — Voice, Chat & Automated Follow-Ups",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2192,
+        -176
+      ],
+      "id": "696098d2-644f-4e3a-9142-c3666e2c2f80",
+      "name": "Order Status Request Received",
+      "webhookId": "d7149edd-a92d-4f03-a734-32a5ea3fcbf4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a51c4b2-56dc-4429-8913-a8c1617f3871",
+              "leftValue": "={{ $json.body.action }}",
+              "rightValue": "request_refund",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1760,
+        -176
+      ],
+      "id": "d6f2d2cc-5106-4bf7-899d-b81748b5e6af",
+      "name": "\tRoute: Status or Refund?"
+    },
+    {
+      "parameters": {
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.body.order_id }}"
+            },
+            {
+              "name": "status",
+              "value": "any"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1328,
+        -368
+      ],
+      "id": "e516dbd1-a2b4-4d7a-8b84-b9c6fb3622f3",
+      "name": "Find Order for Refund"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders/{{ $json.orders[0].id }}.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"order\": {\n    \"id\": {{ $json.orders[0].id }},\n    \"tags\": \"Refund_Requested\",\n    \"note\": \"{{ $('Order Status Request Received').item.json.body.refund_reason }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -880,
+        -368
+      ],
+      "id": "359d503c-031b-4a63-9601-4b5bea2600ff",
+      "name": "Update Order — Mark Refund Requested"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appzC7WG9XRkH9WH8",
+          "mode": "list",
+          "cachedResultName": "ElectroBot Customer Queries",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblFeTV8lDdVQM7x9",
+          "mode": "list",
+          "cachedResultName": "Refund_Requests",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8/tblFeTV8lDdVQM7x9"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order_ID": "={{ $('Order Status Request Received').item.json.body.order_id }}",
+            "Customer_Name": "={{ $('Find Order for Refund').item.json.orders[0].customer.first_name }} {{ $('Find Order for Refund').item.json.orders[0].customer.last_name }}",
+            "Refund_Reason": "={{ $('Order Status Request Received').item.json.body.refund_reason }}",
+            "Channel": "Through Website",
+            "Status": "Pending",
+            "Date_Requested": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order_ID",
+              "displayName": "Order_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer_Name",
+              "displayName": "Customer_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Refund_Reason",
+              "displayName": "Refund_Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date_Requested",
+              "displayName": "Date_Requested",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Link",
+              "displayName": "Order Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -432,
+        -368
+      ],
+      "id": "946e390a-15be-48a3-93b4-7826896b9da0",
+      "name": "\tLog Refund Request",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TypnYYvbv6ozdYa4",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"Your refund request has been submitted successfully. Our team will review it and get back to you soon.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        16,
+        -368
+      ],
+      "id": "f92c605a-12a5-4663-93a8-b6a52081a2fb",
+      "name": "Send Refund Confirmation to Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vapi-order-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2624,
+        432
+      ],
+      "id": "ee0eacc9-1088-431d-bc57-92f23d17c26e",
+      "name": "Vapi Call Data Received",
+      "webhookId": "2fa63734-b7e8-4dc7-bff3-2e5ff05a8873"
+    },
+    {
+      "parameters": {
+        "jsCode": "const toolCall = $input.first().json.body.message.toolCalls[0];\nconst args = toolCall.function[\"arguments\"];\n\nreturn {\n  order_id: args[\"order_id\"],\n  action: args[\"action\"],\n  refund_reason: args[\"refund_reason\"] || null,\n  note: args[\"refund_reason\"] || null,\n  toolCallId: toolCall.id\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        432
+      ],
+      "id": "1c437dbe-d017-4597-abff-f6cc27424f83",
+      "name": "\tParse Vapi Call Payload"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a51c4b2-56dc-4429-8913-a8c1617f3871",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "request_refund",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1776,
+        432
+      ],
+      "id": "3d69e7ed-de6e-48f9-81e2-30895aa79f4d",
+      "name": "Route: Status or Refund?"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appzC7WG9XRkH9WH8",
+          "mode": "list",
+          "cachedResultName": "ElectroBot Customer Queries",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblETNTCEMcLI46Tk",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8/tblETNTCEMcLI46Tk"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order-ID": "={{ $('\tFormat Order Details (local)').item.json.order_id }}",
+            "Customer-Name": "={{ $('\tFormat Order Details (local)').item.json.customer_name }}",
+            "Product-Name": "={{ $('\tFormat Order Details (local)').item.json.product_name }}",
+            "Order-status": "={{ $('\tFormat Order Details (local)').item.json.order_status }}",
+            "Payment-Status": "={{ $('\tFormat Order Details (local)').item.json.payment_status }}",
+            "Query-Type": "={{ $('\tFormat Order Details (local)').item.json.query_type }}",
+            "Time-Stamp": "={{ $('\tFormat Order Details (local)').item.json['timestamp '] }}",
+            "Channel": "={{ $('\tFormat Order Details (local)').item.json.channel }}",
+            "Order-Total": "={{ $('\tFormat Order Details (local)').item.json[' order_total'] }}",
+            "Customer-Email": "={{ $('\tFormat Order Details (local)').item.json.customer_email }}",
+            "Tracking-No": "={{ $('\tFormat Order Details (local)').item.json.tracking_number }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order-ID",
+              "displayName": "Order-ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer-Name",
+              "displayName": "Customer-Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer-Email",
+              "displayName": "Customer-Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Product-Name",
+              "displayName": "Product-Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order-status",
+              "displayName": "Order-status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Payment-Status",
+              "displayName": "Payment-Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order-Total",
+              "displayName": "Order-Total",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Query-Type",
+              "displayName": "Query-Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time-Stamp",
+              "displayName": "Time-Stamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tracking-No",
+              "displayName": "Tracking-No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        624
+      ],
+      "id": "f0df1779-21cb-4a22-a8bd-6195d99c19a4",
+      "name": "\tLog Order Status Query (Phone)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TypnYYvbv6ozdYa4",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.order_id }}"
+            },
+            {
+              "name": "status",
+              "value": "any"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1344,
+        272
+      ],
+      "id": "d774d88b-a9b7-4ed4-8743-cfb23817e671",
+      "name": "\tFind Order for Refund"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders/{{ $json.orders[0].id }}.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"order\": {\n    \"id\": {{ $json.orders[0].id }},\n    \"tags\": \"Refund_Requested\",\n    \"note\": \"{{ $('Route: Status or Refund?').item.json.note }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -896,
+        272
+      ],
+      "id": "ed5d141b-c141-4db8-bde0-e5b51b9ab807",
+      "name": "Update Order — Mark Refund Requested1"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appzC7WG9XRkH9WH8",
+          "mode": "list",
+          "cachedResultName": "ElectroBot Customer Queries",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblFeTV8lDdVQM7x9",
+          "mode": "list",
+          "cachedResultName": "Refund_Requests",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8/tblFeTV8lDdVQM7x9"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order_ID": "={{ $('Route: Status or Refund?').item.json.order_id }}",
+            "Customer_Name": "={{ $('\tFind Order for Refund').item.json.orders[0].customer.first_name }}{{ $('\tFind Order for Refund').item.json.orders[0].customer.last_name }}",
+            "Refund_Reason": "={{ $('Route: Status or Refund?').item.json.refund_reason }}",
+            "Channel": "Through Vapi",
+            "Status": "Pending",
+            "Date_Requested": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order_ID",
+              "displayName": "Order_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer_Name",
+              "displayName": "Customer_Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Refund_Reason",
+              "displayName": "Refund_Reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date_Requested",
+              "displayName": "Date_Requested",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order Link",
+              "displayName": "Order Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -400,
+        272
+      ],
+      "id": "4a3345ea-634c-4a46-8338-57e5b1030407",
+      "name": "Log Refund Request (Phone)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TypnYYvbv6ozdYa4",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $('Vapi Call Data Received').item.json.body.message.toolCalls[0].id }}\",\n      \"result\": \"Your refund request has been submitted successfully. Our team will review it and get back to you soon.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        16,
+        272
+      ],
+      "id": "6802bcc0-074c-4f98-885b-f3246ce977bf",
+      "name": "Send Refund Confirmation to Vapi"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cart-recovery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2384,
+        912
+      ],
+      "id": "6adaef26-b1c1-4b1a-b4e7-58772b27f504",
+      "name": "Abandoned Checkout Detected",
+      "webhookId": "76b7123b-f2c2-41ef-b847-3c375f3c34c4"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.email }}",
+        "subject": "You left something in your cart! 🛒",
+        "emailType": "text",
+        "message": "=Hi there,   \nWe noticed you left some items in your cart at ElectroBot. Don't miss out — complete your purchase now!   \nTotal: Rs {{ $json.body.total_price }}   \nThanks,   \nShopify Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1776,
+        912
+      ],
+      "id": "17cd9ae5-afcb-4ac9-9512-2cfc1fbacb30",
+      "name": "Send Cart Recovery Email",
+      "webhookId": "4e05cbb8-6417-4049-b2c4-d304b7aff235",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "38bOgyZaPC1rp91Y",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.body.order_id }}"
+            },
+            {
+              "name": "status",
+              "value": "any"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1328,
+        -16
+      ],
+      "id": "2d0bdc65-efc7-4930-9e81-1374f39da9d9",
+      "name": "Fetch Order (Voice Trigger website)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d61ec650-bbb9-4089-a810-c778a396506d",
+              "name": "order_id",
+              "value": "={{ $json.orders[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "2da143b6-f56c-42cf-ade1-37a2645c13d6",
+              "name": "customer_name",
+              "value": "={{ $json.orders[0].customer.first_name }} {{ $json.orders[0].customer.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "00136d3f-7d58-4c11-ae31-84e2f2fbb8f8",
+              "name": "customer_email",
+              "value": "={{ $json.orders[0].contact_email }}",
+              "type": "string"
+            },
+            {
+              "id": "0c78cb47-ea93-4fdb-99d3-3daa91bb05f3",
+              "name": "product_name",
+              "value": "={{ $json.orders[0].line_items[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "825d0436-c92b-4282-80a8-81f7d9105920",
+              "name": "order_status",
+              "value": "={{ $json.orders[0].fulfillment_status }}",
+              "type": "string"
+            },
+            {
+              "id": "2c1f242b-f7a8-454f-9c9f-c15132213eb7",
+              "name": "payment_status",
+              "value": "={{ $json.orders[0].financial_status }}",
+              "type": "string"
+            },
+            {
+              "id": "cb043825-01ce-4cbd-a008-202b20b8b82a",
+              "name": " order_total",
+              "value": "={{ $json.orders[0].current_total_price }}",
+              "type": "string"
+            },
+            {
+              "id": "b9ae33f8-0219-42db-a6eb-a070fe007a4f",
+              "name": "query_type",
+              "value": "Order Status",
+              "type": "string"
+            },
+            {
+              "id": "c883fe57-d6ac-4f36-a464-a595d42969f5",
+              "name": "timestamp ",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "d131aebd-3704-4497-bc3d-24e4cea375bd",
+              "name": "tracking_number",
+              "value": "={{ $json.orders[0].fulfillments[0].tracking_number }}",
+              "type": "string"
+            },
+            {
+              "id": "04911a2b-8315-44b2-8694-7e6d41281d5b",
+              "name": "channel",
+              "value": "Through Website",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        -16
+      ],
+      "id": "2b39205b-a79b-4a5a-8d1a-8d628643e8cb",
+      "name": "\tFormat Order Details (website)"
+    },
+    {
+      "parameters": {
+        "url": "https://ali-electro-demo.myshopify.com/admin/api/2024-01/products.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        -16
+      ],
+      "id": "2d79c399-cf27-4d07-81b0-c109483e9f06",
+      "name": "Fetch Product Catalog (website)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const purchasedProductName = $('\tFormat Order Details (website)').item.json.product_name;\n\nconst allProducts = $input.first().json.products;\n\nconst purchasedProduct = allProducts.find(function(p) {\n  return p.title.toLowerCase() === purchasedProductName.toLowerCase();\n});\n\nconst category = purchasedProduct ? purchasedProduct.product_type : null;\n\nlet recommendedProducts = [];\n\nif (category) {\n  recommendedProducts = allProducts\n    .filter(function(p) {\n      return p.product_type === category && p.title.toLowerCase() !== purchasedProductName.toLowerCase();\n    })\n    .map(function(p) {\n      return p.title;\n    });\n}\n\nreturn {\n  recommended_products: recommendedProducts,\n  recommended_products_text: recommendedProducts.join(\" and \")\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -16
+      ],
+      "id": "6a4454fc-ec2a-4eee-9865-e5aa9e5c2e25",
+      "name": "Generate Product Recommendation (website)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"customer_name\": \"{{ $('\tFormat Order Details (website)').item.json.customer_name }}\",\n  \"order_status\": \"{{ $('\tFormat Order Details (website)').item.json.order_status }}\",\n  \"payment_status\": \"{{ $('\tFormat Order Details (website)').item.json.payment_status }}\",\n  \"recommended_products\": \"{{ $('Generate Product Recommendation (website)').item.json.recommended_products_text }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        384,
+        -16
+      ],
+      "id": "ef78577d-f48a-4050-9041-0a7797397971",
+      "name": "\tSend Status Response to Agent (website)"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appzC7WG9XRkH9WH8",
+          "mode": "list",
+          "cachedResultName": "ElectroBot Customer Queries",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblETNTCEMcLI46Tk",
+          "mode": "list",
+          "cachedResultName": "Order-Status",
+          "cachedResultUrl": "https://airtable.com/appzC7WG9XRkH9WH8/tblETNTCEMcLI46Tk"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Order-ID": "={{ $('\tFormat Order Details (website)').item.json.order_id }}",
+            "Customer-Name": "={{ $('\tFormat Order Details (website)').item.json.customer_name }}",
+            "Customer-Email": "={{ $('\tFormat Order Details (website)').item.json.customer_email }}",
+            "Product-Name": "={{ $('\tFormat Order Details (website)').item.json.product_name }}",
+            "Order-status": "={{ $('\tFormat Order Details (website)').item.json.order_status }}",
+            "Payment-Status": "={{ $('\tFormat Order Details (website)').item.json.payment_status }}",
+            "Order-Total": "={{ $('\tFormat Order Details (website)').item.json[' order_total'] }}",
+            "Query-Type": "={{ $('\tFormat Order Details (website)').item.json.query_type }}",
+            "Time-Stamp": "={{ $('\tFormat Order Details (website)').item.json['timestamp '] }}",
+            "Tracking-No": "={{ $('\tFormat Order Details (website)').item.json.tracking_number }}",
+            "Channel": "={{ $('\tFormat Order Details (website)').item.json.channel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Order-ID",
+              "displayName": "Order-ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer-Name",
+              "displayName": "Customer-Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Customer-Email",
+              "displayName": "Customer-Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Product-Name",
+              "displayName": "Product-Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order-status",
+              "displayName": "Order-status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Payment-Status",
+              "displayName": "Payment-Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Order-Total",
+              "displayName": "Order-Total",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Query-Type",
+              "displayName": "Query-Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Time-Stamp",
+              "displayName": "Time-Stamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Tracking-No",
+              "displayName": "Tracking-No",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Refund_Requests",
+              "displayName": "Refund_Requests",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        -16
+      ],
+      "id": "b8a7bcb6-dd68-40ff-83a9-8d25f277ce2f",
+      "name": "\tLog Order Status Query (website)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "TypnYYvbv6ozdYa4",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://ali-electro-demo.myshopify.com/admin/api/2024-01/orders.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.order_id }}"
+            },
+            {
+              "name": "status",
+              "value": "any"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1344,
+        624
+      ],
+      "id": "f44931e4-b80a-4aa4-8b6e-bfd8c0d8704e",
+      "name": "Fetch Order (Voice Trigger local)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d61ec650-bbb9-4089-a810-c778a396506d",
+              "name": "order_id",
+              "value": "={{ $json.orders[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "2da143b6-f56c-42cf-ade1-37a2645c13d6",
+              "name": "customer_name",
+              "value": "={{ $json.orders[0].customer.first_name }} {{ $json.orders[0].customer.last_name }}",
+              "type": "string"
+            },
+            {
+              "id": "00136d3f-7d58-4c11-ae31-84e2f2fbb8f8",
+              "name": "customer_email",
+              "value": "={{ $json.orders[0].contact_email }}",
+              "type": "string"
+            },
+            {
+              "id": "0c78cb47-ea93-4fdb-99d3-3daa91bb05f3",
+              "name": "product_name",
+              "value": "={{ $json.orders[0].line_items[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "825d0436-c92b-4282-80a8-81f7d9105920",
+              "name": "order_status",
+              "value": "={{ $json.orders[0].fulfillment_status }}",
+              "type": "string"
+            },
+            {
+              "id": "2c1f242b-f7a8-454f-9c9f-c15132213eb7",
+              "name": "payment_status",
+              "value": "={{ $json.orders[0].financial_status }}",
+              "type": "string"
+            },
+            {
+              "id": "cb043825-01ce-4cbd-a008-202b20b8b82a",
+              "name": " order_total",
+              "value": "={{ $json.orders[0].current_total_price }}",
+              "type": "string"
+            },
+            {
+              "id": "b9ae33f8-0219-42db-a6eb-a070fe007a4f",
+              "name": "query_type",
+              "value": "Order Status",
+              "type": "string"
+            },
+            {
+              "id": "c883fe57-d6ac-4f36-a464-a595d42969f5",
+              "name": "timestamp ",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "d131aebd-3704-4497-bc3d-24e4cea375bd",
+              "name": "tracking_number",
+              "value": "={{ $json.orders[0].fulfillments[0].tracking_number }}",
+              "type": "string"
+            },
+            {
+              "id": "04911a2b-8315-44b2-8694-7e6d41281d5b",
+              "name": "channel",
+              "value": "Through Vapi",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        624
+      ],
+      "id": "6a0bd48f-d38a-4e62-885f-484f8fb2750f",
+      "name": "\tFormat Order Details (local)"
+    },
+    {
+      "parameters": {
+        "url": "https://ali-electro-demo.myshopify.com/admin/api/2024-01/products.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "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"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -400,
+        624
+      ],
+      "id": "ab0d6611-cb47-48e7-a793-8ee55f917fe5",
+      "name": "Fetch Product Catalog (local)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const purchasedProductName = $('\tFormat Order Details (local)').item.json.product_name;\n\nconst allProducts = $input.first().json.products;\n\nfunction normalize(str) {\n  return str.toLowerCase().replace(/[-\\s]+/g, ' ').trim();\n}\n\nconst normalizedPurchased = normalize(purchasedProductName);\n\n// Ab includes() use karenge, exact === ki jagah\nconst purchasedProduct = allProducts.find(function(p) {\n  const normalizedTitle = normalize(p.title);\n  return normalizedTitle.includes(normalizedPurchased) || normalizedPurchased.includes(normalizedTitle);\n});\n\nconst category = purchasedProduct ? purchasedProduct.product_type : null;\n\nlet recommendedProducts = [];\n\nif (category) {\n  recommendedProducts = allProducts\n    .filter(function(p) {\n      return p.product_type === category && p.title !== (purchasedProduct ? purchasedProduct.title : '');\n    })\n    .map(function(p) {\n      return p.title;\n    });\n}\n\nreturn {\n  recommended_products: recommendedProducts,\n  recommended_products_text: recommendedProducts.join(\" and \")\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        624
+      ],
+      "id": "92fc3826-cf17-4992-9a7e-fef8925a7bed",
+      "name": "Generate Product Recommendation (local)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"results\": [\n    {\n      \"toolCallId\": \"{{ $('Vapi Call Data Received').item.json.body.message.toolCalls[0].id }}\",\n      \"result\": \"Customer name is {{ $('\tFormat Order Details (local)').item.json.customer_name }}. Order status is {{ $('\tFormat Order Details (local)').item.json.order_status }}. Payment status is {{ $('\tFormat Order Details (local)').item.json.payment_status }}. Recommended products: {{ $('Generate Product Recommendation (local)').item.json.recommended_products_text }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        416,
+        624
+      ],
+      "id": "c9f87b0a-5257-47a0-84c8-760d819a7c32",
+      "name": "Send Status Response to Vapi (local)"
+    },
+    {
+      "parameters": {
+        "content": "Through Webite (Call & Messages) Answers",
+        "height": 80
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2592,
+        -176
+      ],
+      "id": "18038b7e-cdcf-4533-bd87-04e6f1f422f2",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Local (Calls & Messages) Answers ",
+        "height": 80,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3056,
+        448
+      ],
+      "id": "d43210a0-673e-4653-895f-5201cce0069f",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Abandon Cart Alet to Customer",
+        "height": 80,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        928
+      ],
+      "id": "e8d931ae-738e-48c8-a650-d103751c6315",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Order Status Request Received": {
+      "main": [
+        [
+          {
+            "node": "\tRoute: Status or Refund?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tRoute: Status or Refund?": {
+      "main": [
+        [
+          {
+            "node": "Find Order for Refund",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Order (Voice Trigger website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Order for Refund": {
+      "main": [
+        [
+          {
+            "node": "Update Order — Mark Refund Requested",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order — Mark Refund Requested": {
+      "main": [
+        [
+          {
+            "node": "\tLog Refund Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tLog Refund Request": {
+      "main": [
+        [
+          {
+            "node": "Send Refund Confirmation to Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vapi Call Data Received": {
+      "main": [
+        [
+          {
+            "node": "\tParse Vapi Call Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tParse Vapi Call Payload": {
+      "main": [
+        [
+          {
+            "node": "Route: Status or Refund?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route: Status or Refund?": {
+      "main": [
+        [
+          {
+            "node": "\tFind Order for Refund",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Order (Voice Trigger local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tLog Order Status Query (Phone)": {
+      "main": [
+        []
+      ]
+    },
+    "\tFind Order for Refund": {
+      "main": [
+        [
+          {
+            "node": "Update Order — Mark Refund Requested1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order — Mark Refund Requested1": {
+      "main": [
+        [
+          {
+            "node": "Log Refund Request (Phone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Refund Request (Phone)": {
+      "main": [
+        [
+          {
+            "node": "Send Refund Confirmation to Vapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Abandoned Checkout Detected": {
+      "main": [
+        [
+          {
+            "node": "Send Cart Recovery Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order (Voice Trigger website)": {
+      "main": [
+        [
+          {
+            "node": "\tFormat Order Details (website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tFormat Order Details (website)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product Catalog (website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product Catalog (website)": {
+      "main": [
+        [
+          {
+            "node": "Generate Product Recommendation (website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Product Recommendation (website)": {
+      "main": [
+        [
+          {
+            "node": "\tSend Status Response to Agent (website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tSend Status Response to Agent (website)": {
+      "main": [
+        [
+          {
+            "node": "\tLog Order Status Query (website)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order (Voice Trigger local)": {
+      "main": [
+        [
+          {
+            "node": "\tFormat Order Details (local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "\tFormat Order Details (local)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product Catalog (local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product Catalog (local)": {
+      "main": [
+        [
+          {
+            "node": "Generate Product Recommendation (local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Product Recommendation (local)": {
+      "main": [
+        [
+          {
+            "node": "Send Status Response to Vapi (local)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Status Response to Vapi (local)": {
+      "main": [
+        [
+          {
+            "node": "\tLog Order Status Query (Phone)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "48aeee2f-9810-4a31-a136-2c665f46a62f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "965f8d0dea88359a9a0523a83922366d7f8de7dab6f50796d9e15080b7076a3e"
+  },
+  "nodeGroups": [],
+  "id": "moo1xeF0mTsfGzrk",
+  "tags": []
+}
